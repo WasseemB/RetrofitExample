@@ -3,6 +3,7 @@ package com.wasseemb.jsonexample;
 import android.content.Context;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.transition.TransitionManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,8 @@ import java.util.List;
 public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHolder> {
     private List<Article> mDataset;
     private Context mContext;
+    int mExpandedPosition = -1;
+    RecyclerView mRecyclerView;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -61,11 +64,28 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
         return new ArticleAdapter.ViewHolder(itemView);
     }
 
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        mRecyclerView = recyclerView;
+    }
+
     // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
+        final boolean isExpanded = position==mExpandedPosition;
+        holder.mTextView.setVisibility(isExpanded?View.VISIBLE:View.GONE);
+        holder.itemView.setActivated(isExpanded);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mExpandedPosition = isExpanded ? -1:position;
+                TransitionManager.beginDelayedTransition(mRecyclerView);
+                notifyDataSetChanged();
+            }
+        });
         holder.mTextView.setText(mDataset.get(position).getTitle());
         Picasso.with(mContext).load(mDataset.get(position).getUrlToImage()).into(holder.mImageView);
 
